@@ -1,5 +1,7 @@
 from enum import Enum
 
+from tradingagents.assets import AssetType
+
 
 class AnalystType(str, Enum):
     MARKET = "market"
@@ -10,6 +12,4 @@ class AnalystType(str, Enum):
     FUNDAMENTALS = "fundamentals"
 
 
-class AssetType(str, Enum):
-    STOCK = "stock"
-    CRYPTO = "crypto"
+__all__ = ["AnalystType", "AssetType"]

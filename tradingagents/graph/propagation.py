@@ -20,6 +20,7 @@ class Propagator:
         company_name: str,
         trade_date: str,
         asset_type: str = "stock",
+        asset_identity: dict[str, Any] | None = None,
         past_context: str = "",
         instrument_context: str = "",
     ) -> dict[str, Any]:
@@ -35,6 +36,7 @@ class Propagator:
             "messages": [("human", company_name)],
             "company_of_interest": company_name,
             "asset_type": asset_type,
+            "asset_identity": asset_identity or {},
             "instrument_context": instrument_context,
             "trade_date": str(trade_date),
             "past_context": past_context,
