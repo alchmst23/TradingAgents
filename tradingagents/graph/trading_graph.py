@@ -28,6 +28,7 @@ from tradingagents.agents.utils.agent_utils import (
     resolve_instrument_identity,
 )
 from tradingagents.agents.utils.memory import TradingMemoryLog
+from tradingagents.assets import AssetRequest, resolve_asset
 from tradingagents.dataflows.config import set_config
 from tradingagents.dataflows.utils import safe_ticker_component
 from tradingagents.default_config import DEFAULT_CONFIG
@@ -333,6 +334,13 @@ class TradingAgentsGraph:
         if updates:
             self.memory_log.batch_update_with_outcomes(updates)
 
+    @staticmethod
+    def resolve_asset_identity(ticker: str, asset_type: str = "stock") -> dict[str, Any]:
+        """Resolve a legacy ticker call into the canonical structured identity."""
+        return resolve_asset(
+            AssetRequest(symbol=ticker, asset_type=asset_type)
+        ).to_state_dict()
+
     def resolve_instrument_context(self, ticker: str, asset_type: str = "stock") -> str:
         """Resolve ticker identity once and return the full instrument context.
 
@@ -422,10 +430,12 @@ class TradingAgentsGraph:
         # deterministically resolved instrument identity for all agents.
         past_context = self.memory_log.get_past_context(company_name)
         instrument_context = self.resolve_instrument_context(company_name, asset_type)
+        asset_identity = self.resolve_asset_identity(company_name, asset_type)
         init_agent_state = self.propagator.create_initial_state(
             company_name,
             trade_date,
             asset_type=asset_type,
+            asset_identity=asset_identity,
             past_context=past_context,
             instrument_context=instrument_context,
         )

@@ -9,6 +9,7 @@ from tradingagents.assets import (
     resolve_asset,
 )
 from tradingagents.graph.propagation import Propagator
+from tradingagents.graph.trading_graph import TradingAgentsGraph
 
 
 def test_existing_stock_ticker_is_backward_compatible():
@@ -86,6 +87,12 @@ def test_invalid_ethereum_contract_is_rejected():
                 contract_address="0x1234",
             )
         )
+
+
+def test_graph_resolves_and_serializes_legacy_crypto_identity():
+    identity = TradingAgentsGraph.resolve_asset_identity("BTC-USD", "crypto")
+    assert identity["canonical_id"] == "crypto:coingecko:bitcoin:spot:USD"
+    assert identity["asset_type"] == "crypto"
 
 
 def test_graph_state_retains_serializable_asset_identity():
