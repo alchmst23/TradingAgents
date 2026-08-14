@@ -63,7 +63,7 @@ Our framework decomposes complex trading tasks into specialized roles.
 
 ### Analyst Team
 - Fundamentals Analyst: Evaluates company financials and performance metrics, identifying intrinsic values and potential red flags.
-- Sentiment Analyst: Aggregates news headlines, StockTwits, and Reddit chatter into a single sentiment read to gauge short-term market mood.
+- Sentiment Analyst: Aggregates news headlines, StockTwits, Reddit, and optional X chatter into a single sentiment read to gauge short-term market mood.
 - News Analyst: Monitors global news and macroeconomic indicators, interpreting the impact of events on market conditions.
 - Technical Analyst: Utilizes technical indicators (like MACD and RSI) to detect trading patterns and forecast price movements.
 
@@ -145,9 +145,15 @@ export MINIMAX_API_KEY=...         # MiniMax — Global (api.minimax.io)
 export MINIMAX_CN_API_KEY=...      # MiniMax — China (api.minimaxi.com)
 export OPENROUTER_API_KEY=...      # OpenRouter
 export ALPHA_VANTAGE_API_KEY=...   # Alpha Vantage
+export X_BEARER_TOKEN=...          # X sentiment (official API; pay-per-use)
 ```
 
 For Azure OpenAI, copy `.env.enterprise.example` to `.env.enterprise` and fill in your credentials.
+
+X sentiment enrichment uses the official seven-day recent-search API and is
+disabled when `X_BEARER_TOKEN` is unset. X API reads use paid credits; the
+integration makes one bounded request (up to 30 Posts) per sentiment run and
+skips historical ranges outside the rolling seven-day window.
 
 For AWS Bedrock, install the extra with `pip install ".[bedrock]"`, set `llm_provider: "bedrock"`, configure AWS credentials (environment variables, `~/.aws/credentials`, or an IAM role) and `AWS_DEFAULT_REGION`, and use a Bedrock model ID, e.g. `us.anthropic.claude-opus-4-8-v1:0`.
 
