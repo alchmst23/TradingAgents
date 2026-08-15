@@ -33,6 +33,7 @@ class CryptoEvidenceOrchestrator:
         coingecko: EvidenceAdapter | None = None,
         geckoterminal: EvidenceAdapter | None = None,
         hyperliquid: EvidenceAdapter | None = None,
+        sentiment: EvidenceAdapter | None = None,
         clock: Callable[[], datetime] | None = None,
         freshness_policy: FreshnessPolicy | None = None,
         price_conflict_threshold: float = 0.05,
@@ -42,6 +43,7 @@ class CryptoEvidenceOrchestrator:
         self.coingecko = coingecko or CoinGeckoAdapter()
         self.geckoterminal = geckoterminal or GeckoTerminalAdapter()
         self.hyperliquid = hyperliquid or HyperliquidDerivativesAdapter()
+        self.sentiment = sentiment
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.freshness_policy = freshness_policy or FreshnessPolicy.default()
         self.price_conflict_threshold = price_conflict_threshold
@@ -104,10 +106,14 @@ class CryptoEvidenceOrchestrator:
             asset.venue == "hyperliquid"
             and asset.market_type == MarketType.PERPETUAL
         ):
-            return (
-                (("hyperliquid", self.hyperliquid),),
-                frozenset({"derivatives_market", "funding_history", "order_book"}),
-            )
+            providers: list[tuple[str, EvidenceAdapter]] = [
+                ("hyperliquid", self.hyperliquid)
+            ]
+            expected = {"derivatives_market", "funding_history", "order_book"}
+            if self.sentiment is not None:
+                providers.append(("donna_x", self.sentiment))
+                expected.add("sentiment")
+            return tuple(providers), frozenset(expected)
 
         providers: list[tuple[str, EvidenceAdapter]] = [
             ("coingecko", self.coingecko)
@@ -116,6 +122,9 @@ class CryptoEvidenceOrchestrator:
         if asset.chain and asset.contract_address:
             providers.append(("geckoterminal", self.geckoterminal))
             expected.add("dex")
+        if self.sentiment is not None:
+            providers.append(("donna_x", self.sentiment))
+            expected.add("sentiment")
         return tuple(providers), frozenset(expected)
 
     @staticmethod

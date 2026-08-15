@@ -195,3 +195,30 @@ def test_quality_clock_is_sampled_after_provider_calls():
 
     assert packet.generated_at == after_fetch
     assert next(item for item in packet.observations if item.data_type == "market").stale is False
+
+
+
+def test_optional_sentiment_provider_is_routed_for_spot_and_counted_in_completeness():
+    cg = StubAdapter(((observation(BTC, "coingecko", "metadata"), observation(BTC, "coingecko", "market", price=60_000)), ()))
+    sentiment = StubAdapter(((observation(BTC, "donna_x", "sentiment"),), ()))
+    service = CryptoEvidenceOrchestrator(coingecko=cg, sentiment=sentiment, clock=lambda: NOW)
+
+    packet = service.collect(BTC)
+
+    assert sentiment.calls == [BTC]
+    assert packet.completeness == 1.0
+    assert packet.freshness_summary["sentiment"] == "fresh"
+
+
+def test_sentiment_failure_degrades_without_losing_market_evidence():
+    cg = StubAdapter(((observation(BTC, "coingecko", "metadata"), observation(BTC, "coingecko", "market", price=60_000)), ()))
+    sentiment = StubAdapter(TimeoutError("credential=secret"))
+    service = CryptoEvidenceOrchestrator(coingecko=cg, sentiment=sentiment, clock=lambda: NOW)
+
+    packet = service.collect(BTC)
+
+    assert {item.data_type for item in packet.observations} == {"metadata", "market"}
+    assert packet.completeness == 2 / 3
+    assert packet.freshness_summary["sentiment"] == "missing"
+    error = next(item for item in packet.provider_errors if item.provider == "donna_x")
+    assert "secret" not in error.message
