@@ -90,7 +90,7 @@ class TestNullishFloatCoercion:
 
     def test_pm_nullish_price_target_coerces_to_none(self):
         d = PortfolioDecision(
-            rating=PortfolioRating.OVERWEIGHT,
+            rating=PortfolioRating.CAUTIOUS_BUY,
             executive_summary="s",
             investment_thesis="t",
             price_target="N/A",
@@ -102,12 +102,12 @@ class TestNullishFloatCoercion:
 class TestRenderResearchPlan:
     def test_required_fields(self):
         p = ResearchPlan(
-            recommendation=PortfolioRating.OVERWEIGHT,
+            recommendation=PortfolioRating.CAUTIOUS_BUY,
             rationale="Bull case carried; tailwinds intact.",
             strategic_actions="Build position over two weeks; cap at 5%.",
         )
         md = render_research_plan(p)
-        assert "**Recommendation**: Overweight" in md
+        assert "**Recommendation**: Cautious Buy" in md
         assert "**Rationale**: Bull case carried" in md
         assert "**Strategic Actions**: Build position" in md
 
@@ -253,7 +253,7 @@ class TestResearchManagerAgent:
     def test_structured_path_produces_rendered_markdown(self):
         captured = {}
         plan = ResearchPlan(
-            recommendation=PortfolioRating.OVERWEIGHT,
+            recommendation=PortfolioRating.CAUTIOUS_BUY,
             rationale="Bull case is stronger; AI tailwind intact.",
             strategic_actions="Build position gradually over two weeks.",
         )
@@ -261,7 +261,7 @@ class TestResearchManagerAgent:
         rm = create_research_manager(llm)
         result = rm(_make_rm_state())
         ip = result["investment_plan"]
-        assert "**Recommendation**: Overweight" in ip
+        assert "**Recommendation**: Cautious Buy" in ip
         assert "**Rationale**: Bull case" in ip
         assert "**Strategic Actions**: Build position" in ip
 
@@ -272,7 +272,7 @@ class TestResearchManagerAgent:
         rm = create_research_manager(llm)
         rm(_make_rm_state())
         prompt = captured["prompt"]
-        for tier in ("Buy", "Overweight", "Hold", "Underweight", "Sell"):
+        for tier in ("Buy", "Cautious Buy", "Hold", "Reduce", "Sell"):
             assert f"**{tier}**" in prompt, f"missing {tier} in prompt"
 
     def test_falls_back_to_freetext_when_structured_unavailable(self):

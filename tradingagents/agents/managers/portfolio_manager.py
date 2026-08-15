@@ -48,9 +48,9 @@ def create_portfolio_manager(llm):
 
 **Rating Scale** (use exactly one):
 - **Buy**: Strong conviction to enter or add to position
-- **Overweight**: Favorable outlook, gradually increase exposure
+- **Cautious Buy**: Favorable but not fully confirmed; start small and increase only if stated conditions are met
 - **Hold**: Maintain current position, no action needed
-- **Underweight**: Reduce exposure, take partial profits
+- **Reduce**: Reduce exposure or take partial profits
 - **Sell**: Exit position or avoid entry
 
 **Context:**

@@ -45,10 +45,16 @@ class PortfolioRating(str, Enum):
     """5-tier rating used by the Research Manager and Portfolio Manager."""
 
     BUY = "Buy"
-    OVERWEIGHT = "Overweight"
+    CAUTIOUS_BUY = "Cautious Buy"
     HOLD = "Hold"
-    UNDERWEIGHT = "Underweight"
+    REDUCE = "Reduce"
     SELL = "Sell"
+
+    @classmethod
+    def _missing_(cls, value):
+        """Normalize legacy stored portfolio jargon to plain-language ratings."""
+        legacy = {"Overweight": cls.CAUTIOUS_BUY, "Underweight": cls.REDUCE}
+        return legacy.get(value)
 
 
 class TraderAction(str, Enum):
@@ -57,7 +63,7 @@ class TraderAction(str, Enum):
     The Trader's job is to translate the Research Manager's investment plan
     into a concrete transaction proposal: should the desk execute a Buy, a
     Sell, or sit on Hold this round.  Position sizing and the nuanced
-    Overweight / Underweight calls happen later at the Portfolio Manager.
+    Cautious Buy / Reduce calls happen later at the Portfolio Manager.
     """
 
     BUY = "Buy"
@@ -81,8 +87,8 @@ class ResearchPlan(BaseModel):
 
     recommendation: PortfolioRating = Field(
         description=(
-            "The investment recommendation. Exactly one of Buy / Overweight / "
-            "Hold / Underweight / Sell. Reserve Hold for situations where the "
+            "The investment recommendation. Exactly one of Buy / Cautious Buy / "
+            "Hold / Reduce / Sell. Reserve Hold for situations where the "
             "evidence on both sides is genuinely balanced; otherwise commit to "
             "the side with the stronger arguments."
         ),
@@ -196,8 +202,8 @@ class PortfolioDecision(BaseModel):
 
     rating: PortfolioRating = Field(
         description=(
-            "The final position rating. Exactly one of Buy / Overweight / Hold / "
-            "Underweight / Sell, picked based on the analysts' debate."
+            "The final position rating. Exactly one of Buy / Cautious Buy / Hold / "
+            "Reduce / Sell, picked based on the analysts' debate."
         ),
     )
     executive_summary: str = Field(

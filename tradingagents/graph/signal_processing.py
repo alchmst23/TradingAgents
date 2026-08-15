@@ -27,5 +27,5 @@ class SignalProcessor:
         self.quick_thinking_llm = quick_thinking_llm
 
     def process_signal(self, full_signal: str) -> str:
-        """Return one of Buy / Overweight / Hold / Underweight / Sell."""
+        """Return one of Buy / Cautious Buy / Hold / Reduce / Sell."""
         return parse_rating(full_signal)

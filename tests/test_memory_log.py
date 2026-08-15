@@ -15,8 +15,8 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 _SEP = TradingMemoryLog._SEPARATOR
 
 DECISION_BUY = "Rating: Buy\nEnter at $189-192, 6% portfolio cap."
-DECISION_OVERWEIGHT = (
-    "Rating: Overweight\n"
+DECISION_CAUTIOUS_BUY = (
+    "Rating: Cautious Buy\n"
     "Executive Summary: Moderate position, await confirmation.\n"
     "Investment Thesis: Strong fundamentals but near-term headwinds."
 )
@@ -118,7 +118,7 @@ class TestTradingMemoryLogCore:
     def test_store_appends_not_overwrites(self, tmp_path):
         log = make_log(tmp_path)
         log.store_decision("NVDA", "2026-01-10", DECISION_BUY)
-        log.store_decision("AAPL", "2026-01-11", DECISION_OVERWEIGHT)
+        log.store_decision("AAPL", "2026-01-11", DECISION_CAUTIOUS_BUY)
         entries = log.load_entries()
         assert len(entries) == 2
         assert entries[0]["ticker"] == "NVDA"
@@ -166,10 +166,10 @@ class TestTradingMemoryLogCore:
         log.store_decision("NVDA", "2026-01-10", DECISION_BUY)
         assert log.load_entries()[0]["rating"] == "Buy"
 
-    def test_rating_parsed_overweight(self, tmp_path):
+    def test_rating_parsed_cautious_buy(self, tmp_path):
         log = make_log(tmp_path)
-        log.store_decision("AAPL", "2026-01-11", DECISION_OVERWEIGHT)
-        assert log.load_entries()[0]["rating"] == "Overweight"
+        log.store_decision("AAPL", "2026-01-11", DECISION_CAUTIOUS_BUY)
+        assert log.load_entries()[0]["rating"] == "Cautious Buy"
 
     def test_rating_fallback_hold(self, tmp_path):
         log = make_log(tmp_path)
@@ -219,7 +219,7 @@ class TestTradingMemoryLogCore:
     def test_load_entries_multiple(self, tmp_path):
         log = make_log(tmp_path)
         log.store_decision("NVDA", "2026-01-10", DECISION_BUY)
-        log.store_decision("AAPL", "2026-01-11", DECISION_OVERWEIGHT)
+        log.store_decision("AAPL", "2026-01-11", DECISION_CAUTIOUS_BUY)
         log.store_decision("MSFT", "2026-01-12", DECISION_NO_RATING)
         entries = log.load_entries()
         assert len(entries) == 3
@@ -326,7 +326,7 @@ class TestTradingMemoryLogCore:
         for i in range(3):
             _resolve_entry(log, "NVDA", f"2026-01-{i+1:02d}", DECISION_BUY, f"Resolved {i}.")
         log.store_decision("NVDA", "2026-02-01", DECISION_BUY)
-        log.store_decision("NVDA", "2026-02-02", DECISION_OVERWEIGHT)
+        log.store_decision("NVDA", "2026-02-02", DECISION_CAUTIOUS_BUY)
         # Trigger rotation by resolving one more entry — pending entries must stay.
         _resolve_entry(log, "NVDA", "2026-01-04", DECISION_BUY, "Resolved 3.")
         entries = log.load_entries()
@@ -711,7 +711,7 @@ class TestPortfolioManagerInjection:
         can parse without any extra LLM call."""
         captured = {}
         decision = PortfolioDecision(
-            rating=PortfolioRating.OVERWEIGHT,
+            rating=PortfolioRating.CAUTIOUS_BUY,
             executive_summary="Build position gradually over the next two weeks.",
             investment_thesis="AI capex cycle remains intact; institutional flows constructive.",
             price_target=215.0,
@@ -721,7 +721,7 @@ class TestPortfolioManagerInjection:
         pm_node = create_portfolio_manager(llm)
         result = pm_node(_make_pm_state())
         md = result["final_trade_decision"]
-        assert "**Rating**: Overweight" in md
+        assert "**Rating**: Cautious Buy" in md
         assert "**Executive Summary**: Build position gradually" in md
         assert "**Investment Thesis**: AI capex cycle" in md
         assert "**Price Target**: 215.0" in md
